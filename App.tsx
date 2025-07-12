@@ -1,9 +1,23 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Modal } from 'react-native';
+import { View, StyleSheet, ScrollView, Modal, TouchableOpacity } from 'react-native';
 import { Appbar, TextInput, Button, Card, Title, Paragraph, Portal, Provider } from 'react-native-paper';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import moment from 'moment';
+import { styles } from './styles';
+
+type StatusServico = 'fazer' | 'concluido' | 'cobrar' | 'cancelado';
+
+interface Cliente {
+  id: string;
+  nome: string;
+  carro: string;
+  placa: string;
+  servico: string;
+  valor: string;
+  dataEntrada: string;
+  status: StatusServico;
+}
 
 // Configuração do calendário em português
 LocaleConfig.locales['br'] = {
@@ -22,16 +36,6 @@ LocaleConfig.locales['br'] = {
   today: 'Hoje'
 };
 LocaleConfig.defaultLocale = 'br';
-
-interface Cliente {
-  id: string;
-  nome: string;
-  carro: string;
-  placa: string;
-  servico: string;
-  valor: string;
-  dataEntrada: string;
-}
 
 const App = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -62,7 +66,8 @@ const App = () => {
       placa,
       servico,
       valor: formatarMoeda(valor),
-      dataEntrada
+      dataEntrada,
+      status: 'fazer' // Status padrão
     };
 
     setClientes([...clientes, novoCliente]);
@@ -97,34 +102,47 @@ const App = () => {
     return dias;
   };
 
+  const mudarStatus = (id: string, novoStatus: StatusServico) => {
+    setClientes(clientes.map(cliente => 
+      cliente.id === id ? {...cliente, status: novoStatus} : cliente
+    ));
+  };
+
+  const getStatusStyle = (status: StatusServico) => {
+    switch(status) {
+      case 'concluido': return styles.statusConcluido;
+      case 'cobrar': return styles.statusCobrar;
+      case 'cancelado': return styles.statusCancelado;
+      default: return styles.statusFazer;
+    }
+  };
+
+  const getStatusTextStyle = (status: StatusServico) => {
+    return status === 'cancelado' 
+      ? styles.statusTextCancelado 
+      : styles.statusText;
+  };
+
   return (
     <Provider>
       <SafeAreaProvider>
         <SafeAreaView style={styles.safeArea}>
           <Appbar.Header>
-            <Appbar.Content 
-              title={`Agendamentos - ${moment(dataSelecionada).format('DD/MM/YYYY')}`} 
-              subtitle={`${clientesDoDia.length} carros`} 
-            />
+            <Appbar.Content title="Meu Lava Jato" />
+            <Appbar.Action icon="calendar" onPress={() => setModalCalendario(true)} />
+            <Appbar.Action icon="plus" onPress={() => setModalAgendamento(true)} />
           </Appbar.Header>
-
-          <View style={styles.botoesContainer}>
-            <Button 
-              mode="contained" 
-              onPress={() => setModalAgendamento(true)}
-              style={styles.botaoAgendar}
-            >
-              Novo Agendamento
-            </Button>
+          
+          <View style={styles.dataContainer}>
             <Button 
               mode="outlined" 
               onPress={() => setModalCalendario(true)}
-              style={styles.botaoCalendario}
+              style={styles.dataButton}
             >
-              Ver Calendário
+              {moment(dataSelecionada).format('DD/MM/YYYY')}
             </Button>
           </View>
-
+          
           <ScrollView contentContainerStyle={styles.scrollContainer}>
             {clientesDoDia.length === 0 ? (
               <Paragraph style={styles.semAgendamentos}>
@@ -132,14 +150,29 @@ const App = () => {
               </Paragraph>
             ) : (
               clientesDoDia.map((cliente) => (
-                <Card key={cliente.id} style={styles.card}>
+                <Card key={cliente.id} style={[styles.card, getStatusStyle(cliente.status)]}>
+                  <View style={styles.statusContainer}>
+                    <Button 
+                      compact
+                      mode="text"
+                      onPress={() => {
+                        const statusOrder: StatusServico[] = ['fazer', 'concluido', 'cobrar', 'cancelado'];
+                        const currentIndex = statusOrder.indexOf(cliente.status);
+                        const nextIndex = (currentIndex + 1) % statusOrder.length;
+                        mudarStatus(cliente.id, statusOrder[nextIndex]);
+                      }}
+                      contentStyle={styles.statusButton}
+                      labelStyle={getStatusTextStyle(cliente.status)}
+                    >
+                      {cliente.status.toUpperCase()}
+                    </Button>
+                  </View>
                   <Card.Content>
                     <Title>{cliente.nome}</Title>
                     <Paragraph>Carro: {cliente.carro}</Paragraph>
                     <Paragraph>Placa: {cliente.placa}</Paragraph>
                     <Paragraph>Serviço: {cliente.servico}</Paragraph>
                     <Paragraph>Valor: {cliente.valor}</Paragraph>
-                    <Paragraph>Data: {moment(cliente.dataEntrada).format('DD/MM/YYYY')}</Paragraph>
                   </Card.Content>
                 </Card>
               ))
@@ -281,83 +314,5 @@ const App = () => {
     </Provider>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  botoesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-  },
-  botaoAgendar: {
-    flex: 1,
-    marginRight: 8,
-  },
-  botaoCalendario: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  scrollContainer: {
-    padding: 16,
-  },
-  card: {
-    marginBottom: 16,
-    elevation: 3,
-  },
-  input: {
-    marginBottom: 12,
-    backgroundColor: '#fff',
-  },
-  semAgendamentos: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: '#666',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    width: '90%',
-    maxWidth: 400,
-  },
-  modalCard: {
-    width: '100%',
-  },
-  modalTitle: {
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  botoesModalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  botaoCancelar: {
-    flex: 1,
-    marginRight: 8,
-  },
-  botaoConfirmar: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  botaoFecharCalendario: {
-    marginTop: 16,
-  },
-  calendario: {
-    marginVertical: 10,
-    borderRadius: 10,
-    elevation: 4,
-  },
-  button: {
-    marginVertical: 8,
-  },
-});
 
 export default App;
