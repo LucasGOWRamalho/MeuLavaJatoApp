@@ -99,4 +99,72 @@ export const styles = StyleSheet.create({
   dataButton: {
     borderColor: '#4682B4',
   },
+    mainContent: {
+    flex: 1,
+    padding: 16,
+  },
+  drawerContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    minHeight: '50%',
+  },
+  closeDrawerButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 10,
+  },
+  drawerItem: {
+    marginVertical: 8,
+    justifyContent: 'flex-start',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  calendarioDrawer: {
+    marginTop: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  drawerCard: {
+    marginTop: 10,
+    elevation: 3,
+    backgroundColor: 'white',
+  },
+  drawerTitle: {
+    textAlign: 'center',
+    marginBottom: 16,
+    color: '#4682B4',
+  },
+  drawerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+   footer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  footerLabel: {
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  footerValue: {
+    color: '#333',
+  },
+  positiveValue: {
+    color: '#4caf50',
+  },
+  negativeValue: {
+    color: '#f44336', 
+  },
+   
 });
